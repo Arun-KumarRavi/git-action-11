@@ -40,30 +40,6 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/horilla-deploy || mkdir ~/horilla-deploy && cd ~/horilla-deploy
-            # Create a simple docker-compose.yml if it doesn't exist
-            cat <<EOF > docker-compose.yml
-            version: '3.8'
-            services:
-              server:
-                image: ${{ secrets.DOCKERHUB_USERNAME }}/horilla:latest
-                ports:
-                  - "8000:8000"
-                restart: unless-stopped
-                command: sh ./entrypoint.sh
-                depends_on:
-                  db:
-                    condition: service_healthy
-              db:
-                image: postgres:16-bullseye
-                environment:
-                  POSTGRES_DB: horilla
-                  POSTGRES_USER: postgres
-                  POSTGRES_PASSWORD: postgres
-                healthcheck:
-                  test: ["CMD", "pg_isready", "-U", "postgres"]
-                  interval: 10s
-                  timeout: 5s
-                  retries: 5
-            EOF
-            docker-compose pull
-            docker-compose up -d
+            # Files are copied via SCP or git pull - for simplicity here, we assume they are already present or updated
+            docker-compose -f docker-compose.prod.yaml pull
+            docker-compose -f docker-compose.prod.yaml up -d
